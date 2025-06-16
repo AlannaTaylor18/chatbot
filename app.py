@@ -1,10 +1,13 @@
-app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
-
+from flask import Flask, request, jsonify
 import os
-import openai
+from flask_cors import CORS
+from transformers import pipeline
+import openai  # ✅ This line is necessary
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
+resume_text = """
+# Your resume goes here...
 
 resume_text = """
 Stuart, Florida  
