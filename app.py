@@ -8,7 +8,6 @@ CORS(app)
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# Corrected: 
 resume_text = """
 Stuart, Florida  
 Alanna Taylor  
@@ -72,9 +71,21 @@ def chat():
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant that answers questions based on Alanna Taylor's resume."},
-                {"role": "user", "content": f"Here is the resume:\n{resume_text}"},
-                {"role": "user", "content": question}
+                {
+                    "role": "system",
+                    "content": (
+                        "You are an AI assistant helping answer questions about Alanna Taylor based on her resume. "
+                        "Respond in a friendly, conversational tone. Only use information from the resume. If the question is off-topic, say so politely."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": f"This is Alanna Taylor's resume:\n{resume_text}"
+                },
+                {
+                    "role": "user",
+                    "content": question
+                }
             ]
         )
 
