@@ -1,16 +1,11 @@
-from flask import Flask, request, jsonify
-import os
-from flask_cors import CORS
-from transformers import pipeline
-
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
-# Load the QA pipeline once on startup
-qa_pipeline = pipeline("question-answering", model="distilbert-base-cased-distilled-squad")
+import os
+import openai
 
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# Your full resume as a multiline string:
 resume_text = """
 Stuart, Florida  
 Alanna Taylor  
@@ -66,19 +61,25 @@ def home():
 def chat():
     try:
         data = request.get_json()
-        question = data.get("message")
+        question = data.get("message", "").strip()
+
         if not question:
             return jsonify({"reply": "Please enter a question."}), 400
 
-        # Use the resume text as the context for QA
-        result = qa_pipeline(question=question, context=resume_text)
-        answer = result.get("answer", "Sorry, I don't have an answer for that.")
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that answers questions based on Alanna Taylor's resume."},
+                {"role": "user", "content": f"Here is the resume:\n{resume_text}"},
+                {"role": "user", "content": question}
+            ]
+        )
 
-        return jsonify({"reply": answer})
+        reply = response.choices[0].message["content"].strip()
+        return jsonify({"reply": reply})
 
     except Exception as e:
         return jsonify({"reply": f"An error occurred: {str(e)}"}), 500
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
