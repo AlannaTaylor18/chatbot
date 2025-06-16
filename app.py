@@ -74,13 +74,11 @@ def chat():
                 {
                     "role": "system",
                     "content": (
-                        "You are an AI assistant helping answer questions about Alanna Taylor based on her resume. "
-                        "Respond in a friendly, conversational tone. Only use information from the resume. If the question is off-topic, say so politely."
+                        "You are a helpful assistant that answers questions about Alanna Taylor using her resume. "
+                        "Here is her resume:\n\n"
+                        f"{resume_text}\n\n"
+                        "Only answer questions using the information in this resume. If the question is not relevant, respond politely."
                     )
-                },
-                {
-                    "role": "user",
-                    "content": f"This is Alanna Taylor's resume:\n{resume_text}"
                 },
                 {
                     "role": "user",
