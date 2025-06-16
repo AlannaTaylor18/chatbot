@@ -1,14 +1,14 @@
 from flask import Flask, request, jsonify
 import os
 from flask_cors import CORS
-from transformers import pipeline
-import openai  # ✅ This line is necessary
+import openai
+
+app = Flask(__name__)
+CORS(app)
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-resume_text = """
-# Your resume goes here...
-
+# Corrected: 
 resume_text = """
 Stuart, Florida  
 Alanna Taylor  
