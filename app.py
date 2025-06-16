@@ -7,7 +7,8 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 # Load the QA pipeline once on startup
-qa_pipeline = pipeline("question-answering", model="deepset/tinyroberta-squad2")
+qa_pipeline = pipeline("question-answering", model="distilbert-base-cased-distilled-squad")
+
 
 # Your full resume as a multiline string:
 resume_text = """
