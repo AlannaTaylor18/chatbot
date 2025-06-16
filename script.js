@@ -7,21 +7,26 @@ document.getElementById("chat-form").addEventListener("submit", async function (
   const chatBox = document.getElementById("chat-box");
 
   const userMessage = document.createElement("div");
+  userMessage.className = "user-message";
   userMessage.textContent = "You: " + userInput;
   chatBox.appendChild(userMessage);
-  chatBox.scrollTop = chatBox.scrollHeight;
 
   document.getElementById("user-input").value = "";
 
   const loadingMessage = document.createElement("div");
+  loadingMessage.className = "bot-message";
   loadingMessage.textContent = "Bot: Thinking...";
   chatBox.appendChild(loadingMessage);
+
+  chatBox.scrollTop = chatBox.scrollHeight;
 
   try {
     const response = await fetch("https://alanna-chatbot.onrender.com/chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: userInput }),
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message: userInput })
     });
 
     const data = await response.json();
