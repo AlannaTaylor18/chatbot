@@ -2,62 +2,38 @@ from flask import Flask, request, jsonify
 import os
 from flask_cors import CORS
 import openai
+import requests
+import pdfplumber
+from io import BytesIO
 
 app = Flask(__name__)
 CORS(app)
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-resume_text = """
-Stuart, Florida  
-Alanna Taylor  
-(772) 626-4475  
-AlannaTaylor@live.com  
-https://alannataylor18.github.io/About_Me/  
-https://www.linkedin.com/in/pivoting2tech/
+RESUME_URL = "https://alannataylor18.github.io/About_Me/files/RESUME_Taylor%20Alanna%202025_Tech.pdf"
 
-Enthusiastic and results-driven professional transitioning into technology from a background in education. Completed IBM’s Applied AI Developer certification with hands-on experience in Python, machine learning, REST APIs, and IBM Cloud. Currently pursuing an engineering certificate to deepen technical expertise. Demonstrated success in data analysis, workflow optimization, LMS management, Excel-based reporting, and technical troubleshooting in a fully remote environment. Eager to contribute to innovative teams solving real-world challenges with scalable, user-focused solutions.
+def fetch_resume_text(url):
+    try:
+        # Fetch PDF from URL
+        response = requests.get(url)
+        response.raise_for_status()
 
-Experience  
-DARWIN GLOBAL LLC (REMOTE)  
-Lead Academic Coach — JUNE 2021 - PRESENT  
-● Manage and mentor a remote team of Academic Coaches using real-time performance dashboards and KPIs.  
-● Perform data extraction and analysis from LMS to generate weekly performance and engagement reports using Excel (PivotTables, formulas).  
-● Troubleshoot and resolve LMS and workflow system issues; often serve as liaison with IT for backend fixes.  
-● Built custom workflows to streamline academic intervention processes, reducing student resolution time by 30%.  
-● Collaborate cross-functionally with stakeholders (Product, IT, Student Services) to enhance platform functionality and data integrity.
+        # Open PDF from bytes
+        with pdfplumber.open(BytesIO(response.content)) as pdf:
+            text = ""
+            for page in pdf.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + "\n"
+        return text.strip()
+    except Exception as e:
+        print(f"Error fetching or parsing resume PDF: {e}")
+        return None
 
-Academic Coach — 2016-2021  
-● Supported 400+ adult learners by analyzing performance data and implementing interventions that improved course completion.  
-● Acted as Tier 1 tech support for platform and account issues; resolved 90% of issues without escalation.  
-● Maintained accurate student records in alignment with accreditation/FERPA standards, ensuring data integrity and accountability.  
-● Maintained FERPA-compliant student records and processed over $1.5M in financial aid awards.  
-● Delivered career development webinars and academic coaching sessions, enhancing student outcomes.
+resume_text = fetch_resume_text(RESUME_URL) or "Resume could not be loaded."
 
-LOGISTICS HEALTH  
-Administrative Intake Personnel (PER DIEM) — 2008-2016  
-● Managed logistics for military healthcare events serving 300+ participants; streamlined documentation and reduced wait times by 20%.
-
-Education  
-Bachelor of Science, Indian River State College - Fort Pierce, Florida  
-Exceptional Student Education with Reading and ESOL Endorsement
-
-Skills & Certifications  
-● IBM Applied AI Developer (IBM, 2025)  
-Completed 7-course specialization with hands-on projects in Python, machine learning, REST APIs, and IBM Cloud.  
-edX Verified Certificates: AI for Everyone, Introduction to Generative AI, Prompt Engineering, Developing Generative AI Applications with Python, Python for AI & Development Project
-
-● Programming & Tools: Python, Jupyter Notebooks, IBM Watson, REST APIs, Git/GitHub, VS Code, JSON  
-● Cloud & AI Platforms: IBM Cloud, Watson NLP, Watson Assistant, Watson Studios  
-● Software: Microsoft Office, Google Suite, Five9 Dialer, Reporting & Analytics tools  
-● Data & Troubleshooting: Data analytics, LMS systems, FERPA compliance, ticketing systems  
-● Other Tools: Excel, Google Workspace, Microsoft Teams, Zoom, Canvas LMS, Blackboard, Salesforce  
-● Soft Skills: Excellent communication & documentation, tech troubleshooting, training & coaching, remote collaboration
-"""
-
-@app.route("/", methods=["GET"])
-def home():
-    return "Chatbot is running. POST to /chat with a question."
+import re
 
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -68,6 +44,12 @@ def chat():
         if not question:
             return jsonify({"reply": "Please enter a question."}), 400
 
+        # Simple greeting detection
+        greetings = ["hi", "hello", "hey", "good morning", "good afternoon", "good evening"]
+        if any(re.fullmatch(rf"\b{g}\b", question.lower()) for g in greetings):
+            return jsonify({"reply": "Hello! Feel free to ask me questions about Alanna Taylor's resume."})
+
+        # Now send actual questions to OpenAI
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -77,7 +59,8 @@ def chat():
                         "You are a helpful assistant that answers questions about Alanna Taylor using her resume. "
                         "Here is her resume:\n\n"
                         f"{resume_text}\n\n"
-                        "Only answer questions using the information in this resume. If the question is not relevant, respond politely."
+                        "Only answer questions using the information in this resume. "
+                        "If the question is not relevant, respond politely."
                     )
                 },
                 {
@@ -92,6 +75,3 @@ def chat():
 
     except Exception as e:
         return jsonify({"reply": f"An error occurred: {str(e)}"}), 500
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
