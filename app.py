@@ -2,35 +2,63 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
 import re
-import requests
-import pdfplumber
-from io import BytesIO
 from openai import OpenAI
 
 app = Flask(__name__)
 CORS(app)
 
-client = OpenAI()  # Uses OPENAI_API_KEY from environment variables automatically
+client = OpenAI()  # Assumes OPENAI_API_KEY is set in environment
 
-RESUME_URL = "https://alannataylor18.github.io/About_Me/files/RESUME_Taylor%20Alanna%202025_Tech.pdf"
+resume_text = """
+Alanna Taylor
+Stuart, Florida
+(772) 626-4475
+AlannaTaylor@live.com
+https://www.linkedin.com/in/pivoting2tech/
 
-def fetch_resume_text(url):
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
+Enthusiastic and results-driven professional transitioning into technology from a background in education. Completed IBM’s Applied AI Developer certification, gaining hands-on experience with Python, machine learning, REST APIs, and IBM Cloud. Currently pursuing an engineering certificate to deepen technical knowledge. Skilled in remote collaboration, data-driven decision-making, and technical troubleshooting. Eager to contribute to innovative teams solving real-world challenges through scalable, user-focused technology solutions.
 
-        with pdfplumber.open(BytesIO(response.content)) as pdf:
-            text = ""
-            for page in pdf.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    text += page_text + "\n"
-        return text.strip()
-    except Exception as e:
-        print(f"Error fetching or parsing resume PDF: {e}")
-        return None
+Experience
 
-resume_text = fetch_resume_text(RESUME_URL) or "Resume could not be loaded."
+DARWIN GLOBAL LLC (REMOTE)
+Lead Academic Coach (June 2021 – Present)
+- Leads and mentors a team of 3+ Academic Coaches in a fully remote, data-driven environment; conducted performance audits and leveraged analytics to drive team efficiency.
+- Identifies and resolves systemic LMS and workflow issues, improving student support resolution times.
+- Collaborates cross-functionally with stakeholders to improve learner retention and engagement.
+
+Academic Coach (2016 – 2021)
+- Supported 400+ adult learners by analyzing performance data and implementing interventions that improved course completion.
+- Acted as Tier 1 tech support for platform and account issues; resolved 90% of issues without escalation.
+- Maintained FERPA-compliant student records and processed over $1.5M in financial aid awards.
+- Delivered career development webinars and academic coaching sessions, enhancing student outcomes.
+
+LOGISTICS HEALTH
+Administrative Intake Personnel (Per Diem) (2008 – 2016)
+- Managed logistics for military healthcare events serving 300+ participants; streamlined documentation and reduced wait times by 20%.
+
+Education
+
+Bachelor of Science, Indian River State College - Fort Pierce, Florida
+- Exceptional Student Education with Reading and ESOL Endorsement
+
+Skills & Certifications
+
+- IBM Applied AI Developer (IBM, 2025)
+  Completed 7-course specialization with hands-on projects in Python, machine learning, REST APIs, and IBM Cloud.
+
+- edX Verified Certificates:
+  AI for Everyone, Introduction to Generative AI, Prompt Engineering, Developing Generative AI Applications with Python, Python for AI & Development Project
+
+- Florida Educator Certification – Exceptional Student Education K–12 & ESOL (Active)
+
+- Languages/Tools: Python, C#, Flask, IBM Cloud, Jupyter, Google Colab, Git/GitHub
+
+- Frameworks/Platforms: REST APIs, Salesforce Lightning, LMS platforms
+
+- Software: Microsoft Office, Google Suite, Five9 Dialer, Reporting & Analytics tools
+
+- Soft Skills: Excellent communication & documentation, tech troubleshooting, training & coaching, remote collaboration
+"""
 
 @app.route("/chat", methods=["POST"])
 def chat():
